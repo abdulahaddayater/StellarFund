@@ -35,11 +35,11 @@ try {
   Write-Host "Build succeeded. App is deployable." -ForegroundColor Green
   Write-Host ""
   Write-Host "Vercel checklist:" -ForegroundColor Cyan
-  Write-Host "  1. Root Directory = apps/web  (preferred)"
-  Write-Host "     OR leave Root Directory empty and use root vercel.json fallback"
-  Write-Host "  2. Framework Preset = Next.js"
-  Write-Host "  3. Output Directory = blank"
-  Write-Host "  4. Redeploy without build cache"
+  Write-Host "  1. Root Directory = apps/web"
+  Write-Host "  2. Install Command = OFF (default npm ci, NOT npm ci --prefix apps/web)"
+  Write-Host "  3. Framework Preset = Next.js"
+  Write-Host "  4. Output Directory = blank"
+  Write-Host "  5. Redeploy Production without build cache"
 }
 finally {
   Pop-Location

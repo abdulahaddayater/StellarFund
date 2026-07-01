@@ -154,6 +154,20 @@ The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` (with `Code
 | Build logs | Failed or no `next build` | Shows `✓ Compiled successfully` |
 | URL you open | Old preview / failed deploy | **Production** URL from green deploy card |
 
+### Fix “Production Overrides differ from Project Settings”
+
+If Production shows **`npm ci --prefix apps/web`** but Root Directory is **`apps/web`**, that override is **wrong** — it tries to install into `apps/web/apps/web` and breaks the deploy (404 NOT_FOUND).
+
+1. **Settings → General → Root Directory** = **`apps/web`** → Save
+2. **Settings → Build and Deployment → Framework Settings**
+3. **Install Command** → toggle override **OFF** (leave empty; Vercel runs `npm ci` inside `apps/web`)
+4. **Build Command** → override **OFF** (default `next build`)
+5. **Output Directory** → override **OFF** (must stay empty for Next.js)
+6. **Framework Preset** → **Next.js**
+7. **Deployments** → ⋮ on latest → **Redeploy** → Production → uncheck **Use existing Build Cache**
+
+After redeploy, Production Overrides should **match** Project Settings (no stale `npm ci --prefix apps/web`).
+
 ### Option A — Re-import (most reliable)
 
 1. [vercel.com/new](https://vercel.com/new) → import **`abdulahaddayater/StellarFund`**
@@ -177,19 +191,9 @@ The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` (with `Code
 3. Clear **Output Directory**, **Build Command**, and **Install Command** overrides
 4. **Deployments** → **Redeploy** → uncheck **Use existing Build Cache**
 5. In build logs, confirm you see:
-   - `npm ci`
+   - `npm ci` (not `npm ci --prefix apps/web`)
    - `next build`
    - `Route (app)` table with `/`
-
-### Option C — Repo root fallback
-
-If Root Directory stays at repo root (`./`), root **`vercel.json`** builds `apps/web` via `@vercel/next`. You may see a warning about `builds` — that is expected. Prefer Option A instead.
-
-### Verify locally
-
-```powershell
-.\scripts\verify-deploy.ps1
-```
 
 Contract deploy uses `scripts/deploy.ps1` / `scripts/deploy.sh` (manual).
 
