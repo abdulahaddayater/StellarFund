@@ -8,17 +8,15 @@ import {
   useMemo,
   useState,
 } from "react";
-import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
-import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
-import { Networks, KitEventType } from "@creit.tech/stellar-wallets-kit/types";
-import { NETWORK_PASSPHRASE } from "@/lib/constants";
 import { fetchNativeXlmBalance } from "@/lib/stellar/balance";
-import { formatWalletError, isUserCancelledWallet } from "@/lib/soroban/errors";
 import {
-  restoreWalletSession,
-  trackWalletModule,
-} from "@/lib/soroban/submit";
+  getStellarWalletsKit,
+  initWalletKitAfterHydration,
+} from "@/lib/stellar/wallets-kit";
+import { formatWalletError, isUserCancelledWallet } from "@/lib/soroban/errors";
+import { restoreWalletSession, trackWalletModule } from "@/lib/soroban/submit";
 import { toast } from "sonner";
+import { KitEventType } from "@creit.tech/stellar-wallets-kit/types";
 
 interface WalletContextValue {
   address: string | null;
@@ -32,24 +30,6 @@ interface WalletContextValue {
 }
 
 const WalletContext = createContext<WalletContextValue | null>(null);
-
-function getNetwork(): Networks {
-  return NETWORK_PASSPHRASE.includes("Test")
-    ? Networks.TESTNET
-    : Networks.PUBLIC;
-}
-
-let kitInitialized = false;
-
-function ensureKit() {
-  if (!kitInitialized && typeof window !== "undefined") {
-    StellarWalletsKit.init({
-      modules: defaultModules(),
-      network: getNetwork(),
-    });
-    kitInitialized = true;
-  }
-}
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
@@ -79,22 +59,23 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, [refreshBalance]);
 
   useEffect(() => {
-    ensureKit();
+    let cancelled = false;
+    let cleanup: (() => void) | undefined;
 
-    const untrackModule = trackWalletModule();
+    void initWalletKitAfterHydration((kit) => {
+      const untrackModule = trackWalletModule(kit);
 
-    restoreWalletSession().then((restored) => {
-      if (restored) {
-        setAddress(restored);
-        localStorage.setItem("stellarfund_wallet", restored);
-      } else {
-        localStorage.removeItem("stellarfund_wallet");
-      }
-    });
+      void restoreWalletSession(kit).then((restored) => {
+        if (cancelled) return;
+        if (restored) {
+          setAddress(restored);
+          localStorage.setItem("stellarfund_wallet", restored);
+        } else {
+          localStorage.removeItem("stellarfund_wallet");
+        }
+      });
 
-    const unsub = StellarWalletsKit.on(
-      KitEventType.STATE_UPDATED,
-      (event) => {
+      const unsub = kit.on(KitEventType.STATE_UPDATED, (event) => {
         const addr = event.payload.address;
         if (addr) {
           setAddress(addr);
@@ -105,20 +86,27 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("stellarfund_wallet");
           localStorage.removeItem("stellarfund_wallet_module");
         }
-      },
-    );
+      });
+
+      return () => {
+        untrackModule();
+        unsub();
+      };
+    }).then((dispose) => {
+      if (!cancelled) cleanup = dispose;
+    });
 
     return () => {
-      untrackModule();
-      unsub();
+      cancelled = true;
+      cleanup?.();
     };
   }, []);
 
   const connect = useCallback(async () => {
-    ensureKit();
     setIsConnecting(true);
     try {
-      const { address: addr } = await StellarWalletsKit.authModal();
+      const kit = await getStellarWalletsKit();
+      const { address: addr } = await kit.authModal();
       setAddress(addr);
       localStorage.setItem("stellarfund_wallet", addr);
       toast.success("Wallet connected");
@@ -133,9 +121,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const disconnect = useCallback(async () => {
-    ensureKit();
     try {
-      await StellarWalletsKit.disconnect();
+      const kit = await getStellarWalletsKit();
+      await kit.disconnect();
     } catch {
       /* ignore */
     }
@@ -178,5 +166,3 @@ export function useWallet() {
   if (!ctx) throw new Error("useWallet must be used within WalletProvider");
   return ctx;
 }
-
-export { StellarWalletsKit };

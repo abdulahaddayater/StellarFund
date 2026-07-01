@@ -5,9 +5,9 @@ import {
   rpc,
   scValToNative,
 } from "@stellar/stellar-sdk";
-import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import { KitEventType } from "@creit.tech/stellar-wallets-kit/types";
 import { NETWORK_PASSPHRASE } from "@/lib/constants";
+import { getStellarWalletsKit } from "@/lib/stellar/wallets-kit";
 import { server } from "@/lib/soroban/client";
 import { formatWalletError, parseSorobanError } from "@/lib/soroban/errors";
 
@@ -15,6 +15,8 @@ export interface SubmitResult {
   hash: string;
   returnValue?: unknown;
 }
+
+type WalletsKit = Awaited<ReturnType<typeof getStellarWalletsKit>>;
 
 function extractFailedTxMessage(
   txResponse: rpc.Api.GetFailedTransactionResponse,
@@ -30,10 +32,12 @@ function extractFailedTxMessage(
 }
 
 async function ensureWalletSession(expectedAddress?: string): Promise<string> {
+  const kit = await getStellarWalletsKit();
+
   try {
-    const { address } = await StellarWalletsKit.getAddress();
+    const { address } = await kit.getAddress();
     if (expectedAddress && address !== expectedAddress) {
-      const { address: refreshed } = await StellarWalletsKit.authModal();
+      const { address: refreshed } = await kit.authModal();
       if (expectedAddress && refreshed !== expectedAddress) {
         throw new Error("Connected wallet does not match the expected account.");
       }
@@ -49,7 +53,7 @@ async function ensureWalletSession(expectedAddress?: string): Promise<string> {
     ) {
       throw err;
     }
-    const { address } = await StellarWalletsKit.authModal();
+    const { address } = await kit.authModal();
     if (expectedAddress && address !== expectedAddress) {
       throw new Error("Connected wallet does not match the expected account.");
     }
@@ -62,10 +66,11 @@ export async function signAndSubmitXdr(
   address?: string,
 ): Promise<SubmitResult> {
   const signer = await ensureWalletSession(address);
+  const kit = await getStellarWalletsKit();
 
   let signedTxXdr: string;
   try {
-    ({ signedTxXdr } = await StellarWalletsKit.signTransaction(xdr, {
+    ({ signedTxXdr } = await kit.signTransaction(xdr, {
       networkPassphrase: NETWORK_PASSPHRASE,
       address: signer,
     }));
@@ -108,21 +113,21 @@ export async function signAndSubmitXdr(
   return { hash: sendResponse.hash, returnValue };
 }
 
-export function trackWalletModule(): () => void {
-  return StellarWalletsKit.on(KitEventType.WALLET_SELECTED, (event) => {
+export function trackWalletModule(kit: WalletsKit): () => void {
+  return kit.on(KitEventType.WALLET_SELECTED, (event) => {
     if (event.payload.id) {
       localStorage.setItem("stellarfund_wallet_module", event.payload.id);
     }
   });
 }
 
-export async function restoreWalletSession(): Promise<string | null> {
+export async function restoreWalletSession(kit: WalletsKit): Promise<string | null> {
   const moduleId = localStorage.getItem("stellarfund_wallet_module");
   if (!moduleId) return null;
 
   try {
-    StellarWalletsKit.setWallet(moduleId);
-    const { address } = await StellarWalletsKit.getAddress();
+    kit.setWallet(moduleId);
+    const { address } = await kit.getAddress();
     return address;
   } catch {
     localStorage.removeItem("stellarfund_wallet_module");
