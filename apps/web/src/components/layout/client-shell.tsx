@@ -2,7 +2,6 @@
 
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
-import { ThemeProvider } from "@/providers/theme-provider";
 import { ToastProvider } from "@/providers/toast-provider";
 
 const WalletShell = dynamic(() => import("@/components/layout/wallet-shell"), {
@@ -20,11 +19,11 @@ function WalletShellFallback({ children }: { children: React.ReactNode }) {
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
+    <>
       <Suspense fallback={<WalletShellFallback>{children}</WalletShellFallback>}>
         <WalletShell>{children}</WalletShell>
       </Suspense>
       <ToastProvider />
-    </ThemeProvider>
+    </>
   );
 }
