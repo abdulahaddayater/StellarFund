@@ -15,30 +15,34 @@ export function FeaturedCampaigns() {
   return (
     <section className="px-4 py-16 sm:px-6">
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex items-center justify-between">
-          <h2 className="text-2xl font-bold sm:text-3xl">Trending Campaigns</h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-2xl font-bold sm:text-3xl">Popular projects</h2>
           <Link href="/campaigns">
             <Button variant="outline" size="sm">
-              View All
+              View all
             </Button>
           </Link>
         </div>
+        <p className="mb-8 text-sm text-muted-foreground">
+          Projects getting the most attention right now — click any card to see
+          details and contribute.
+        </p>
         {loading && <CampaignGridSkeleton count={3} />}
         {error && (
           <EmptyState
             icon="search"
-            title="Could not load campaigns"
+            title="Could not load projects"
             description={error}
-            actionLabel="Try Again"
+            actionLabel="Try again"
             actionHref="/campaigns"
           />
         )}
         {!loading && !error && featured.length === 0 && (
           <EmptyState
             icon="rocket"
-            title="No campaigns yet"
-            description="Be the first to launch a campaign on StellarFund."
-            actionLabel="Create Campaign"
+            title="No projects yet"
+            description="Be the first to launch a funding campaign on Stellar testnet."
+            actionLabel="Start a Project"
             actionHref="/campaigns/create"
           />
         )}

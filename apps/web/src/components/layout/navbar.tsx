@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   Megaphone,
   Wallet,
-  User,
+  Plus,
   Sun,
   Moon,
   Menu,
@@ -20,10 +20,10 @@ import { Button } from "@/components/ui/button";
 import { useWallet } from "@/providers/wallet-provider";
 
 const navLinks = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/campaigns", label: "Campaigns", icon: Megaphone },
+  { href: "/campaigns", label: "Browse Projects", icon: Megaphone },
+  { href: "/campaigns/create", label: "Start a Project", icon: Plus },
+  { href: "/dashboard", label: "My Dashboard", icon: LayoutDashboard },
   { href: "/wallet", label: "Wallet", icon: Wallet },
-  { href: "/profile", label: "Profile", icon: User },
 ];
 
 export function Navbar() {
@@ -76,7 +76,7 @@ export function Navbar() {
             </Button>
           ) : (
             <Button size="sm" onClick={connect} disabled={isConnecting}>
-              {isConnecting ? "Connecting..." : "Connect Wallet"}
+              {isConnecting ? "Connecting..." : "Connect Wallet to Begin"}
             </Button>
           )}
 
@@ -124,16 +124,16 @@ export function Footer() {
               <span className="text-lg font-bold">StellarFund</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Decentralized crowdfunding on Stellar Soroban. Fund ideas without
-              middlemen.
+              Crowdfunding on Stellar — transparent, wallet-based, no middlemen.
             </p>
           </div>
           <div>
             <h4 className="mb-3 font-semibold">Platform</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/campaigns" className="hover:text-orange-400">Browse Campaigns</Link></li>
-              <li><Link href="/campaigns/create" className="hover:text-orange-400">Start a Campaign</Link></li>
-              <li><Link href="/dashboard" className="hover:text-orange-400">Dashboard</Link></li>
+              <li><Link href="/campaigns" className="hover:text-orange-400">Browse Projects</Link></li>
+              <li><Link href="/campaigns/create" className="hover:text-orange-400">Start a Project</Link></li>
+              <li><Link href="/dashboard" className="hover:text-orange-400">My Dashboard</Link></li>
+              <li><Link href="/wallet" className="hover:text-orange-400">Wallet</Link></li>
             </ul>
           </div>
           <div>

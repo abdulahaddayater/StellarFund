@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { CampaignCard } from "@/components/campaign/campaign-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CampaignGridSkeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/ui/page-header";
 
 export default function ProfilePage() {
   const { address, isConnected, connect } = useWallet();
@@ -28,10 +29,14 @@ export default function ProfilePage() {
   if (!isConnected) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        <PageHeader
+          title="Your Profile"
+          description="Connect your wallet to see your Stellar address and the projects you have created."
+        />
         <EmptyState
           icon="wallet"
           title="Connect to view profile"
-          description="Your profile shows campaigns you've created and activity on StellarFund."
+          description="Your profile shows projects you created and how much you have raised."
           actionLabel="Connect Wallet"
           onAction={connect}
         />
@@ -47,7 +52,7 @@ export default function ProfilePage() {
             <User className="h-8 w-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Profile</h1>
+            <h1 className="text-2xl font-bold">Your Profile</h1>
             <p className="font-mono text-sm text-muted-foreground">
               {truncateAddress(address!, 8)}
             </p>
@@ -60,7 +65,7 @@ export default function ProfilePage() {
               <Megaphone className="h-8 w-8 text-orange-400" />
               <div>
                 <p className="text-2xl font-bold">{myCampaigns.length}</p>
-                <p className="text-sm text-muted-foreground">Campaigns Created</p>
+                <p className="text-sm text-muted-foreground">Projects created</p>
               </div>
             </CardContent>
           </Card>
@@ -69,7 +74,7 @@ export default function ProfilePage() {
               <Heart className="h-8 w-8 text-orange-400" />
               <div>
                 <p className="text-2xl font-bold">{formatXlm(totalRaised)}</p>
-                <p className="text-sm text-muted-foreground">Total Raised (XLM)</p>
+                <p className="text-sm text-muted-foreground">Total raised (XLM)</p>
               </div>
             </CardContent>
           </Card>
@@ -77,14 +82,24 @@ export default function ProfilePage() {
             <CardContent className="pt-6">
               <p className="text-sm text-muted-foreground">Network</p>
               <p className="text-lg font-bold text-orange-400">Soroban Testnet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Test funds only — not real money
+              </p>
             </CardContent>
           </Card>
         </div>
 
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold">Your Campaigns</h2>
+          <div>
+            <h2 className="text-xl font-bold">Your projects</h2>
+            <p className="text-sm text-muted-foreground">
+              Campaigns linked to your wallet address
+            </p>
+          </div>
           <Link href="/campaigns/create">
-            <Button size="sm">Create New</Button>
+            <Button size="sm" className="gap-1">
+              Start a Project
+            </Button>
           </Link>
         </div>
 
@@ -92,9 +107,9 @@ export default function ProfilePage() {
         {!loading && myCampaigns.length === 0 && (
           <EmptyState
             icon="rocket"
-            title="No campaigns yet"
-            description="Start your first crowdfunding campaign on Stellar."
-            actionLabel="Create Campaign"
+            title="No projects yet"
+            description="Create your first project and share it with backers on Stellar testnet."
+            actionLabel="Start a Project"
             actionHref="/campaigns/create"
           />
         )}

@@ -20,7 +20,7 @@ const CAMPAIGN_CONTRACT_ERRORS: Record<number, string> = {
 };
 
 export function parseSorobanError(err: unknown): string {
-  const message = err instanceof Error ? err.message : String(err);
+  const message = normalizeErrorMessage(err);
 
   const contractMatch = message.match(/Error\(Contract,\s*#(\d+)\)/);
   if (contractMatch) {
@@ -39,12 +39,39 @@ export function parseSorobanError(err: unknown): string {
   return message;
 }
 
-export function formatWalletError(err: unknown): string {
+function isDomEvent(value: unknown): value is Event {
+  return typeof Event !== "undefined" && value instanceof Event;
+}
+
+export function isUserCancelledWallet(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: number }).code === -1
+  );
+}
+
+export function normalizeErrorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
+  if (isDomEvent(err)) {
+    return "Something failed to load. Please refresh the page.";
+  }
   if (typeof err === "object" && err !== null && "message" in err) {
     const message = (err as { message?: unknown }).message;
     if (typeof message === "string" && message.length > 0) return message;
   }
   if (typeof err === "string" && err.length > 0) return err;
-  return "Transaction failed";
+  const asString = String(err);
+  if (asString === "[object Event]") {
+    return "Something failed to load. Please refresh the page.";
+  }
+  return asString === "[object Object]" ? "Something went wrong" : asString;
+}
+
+export function formatWalletError(err: unknown): string {
+  if (isUserCancelledWallet(err)) {
+    return "Wallet connection cancelled.";
+  }
+  return normalizeErrorMessage(err) || "Transaction failed";
 }

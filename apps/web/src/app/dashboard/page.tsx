@@ -1,14 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
   Megaphone,
   Users,
   Radio,
-  Plus,
 } from "lucide-react";
 import { useCampaigns } from "@/hooks/use-campaigns";
 import { useEventStream } from "@/hooks/use-event-stream";
@@ -18,15 +16,16 @@ import { formatXlm } from "@/lib/utils";
 import { CampaignCard } from "@/components/campaign/campaign-card";
 import { CampaignGridSkeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { HelpBanner } from "@/components/ui/help-banner";
 import { toast } from "sonner";
 
 export default function DashboardPage() {
   const { campaigns, loading, error, refresh } = useCampaigns();
   const { address } = useWallet();
   const { events, connected } = useEventStream((event) => {
-    toast.info(`Campaign #${event.campaignId}: ${event.type.replace(/_/g, " ")}`);
+    toast.info(`Project #${event.campaignId}: ${event.type.replace(/_/g, " ")}`);
     refresh();
   });
 
@@ -40,33 +39,44 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground">
-            Overview of campaigns and live activity
-          </p>
-        </div>
-        <Link href="/campaigns/create">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            New Campaign
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="My Dashboard"
+        description="Track projects you created and see live activity across StellarFund."
+        actionLabel="Start a Project"
+        actionHref="/campaigns/create"
+      />
+
+      {!address && (
+        <HelpBanner className="mb-8" title="Connect to see your projects">
+          Link your wallet to view campaigns you have created and manage them from
+          here.
+        </HelpBanner>
+      )}
 
       <div className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
-          { icon: Megaphone, label: "Active Campaigns", value: stats.active },
+          {
+            icon: Megaphone,
+            label: "Open projects",
+            hint: "Currently accepting contributions",
+            value: stats.active,
+          },
           {
             icon: TrendingUp,
-            label: "Total Raised",
+            label: "Total raised",
+            hint: "Across all listed projects",
             value: `${formatXlm(stats.totalRaised)} XLM`,
           },
-          { icon: Users, label: "Total Backers", value: stats.totalBackers },
+          {
+            icon: Users,
+            label: "Total backers",
+            hint: "People who contributed",
+            value: stats.totalBackers,
+          },
           {
             icon: Radio,
-            label: "Live Events",
+            label: "Live updates",
+            hint: "Real-time blockchain events",
             value: connected ? "Connected" : "Offline",
           },
         ].map((s, i) => (
@@ -82,8 +92,9 @@ export default function DashboardPage() {
                   <s.icon className="h-6 w-6 text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">{s.label}</p>
+                  <p className="text-sm font-medium">{s.label}</p>
                   <p className="text-xl font-bold">{s.value}</p>
+                  <p className="text-xs text-muted-foreground">{s.hint}</p>
                 </div>
               </CardContent>
             </Card>
@@ -93,12 +104,15 @@ export default function DashboardPage() {
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
-          <h2 className="mb-4 text-xl font-bold">Your Campaigns</h2>
+          <h2 className="mb-2 text-xl font-bold">Your projects</h2>
+          <p className="mb-4 text-sm text-muted-foreground">
+            Campaigns created with your connected wallet address.
+          </p>
           {!address && (
             <EmptyState
               icon="wallet"
               title="Connect your wallet"
-              description="Connect a Stellar wallet to see campaigns you've created."
+              description="Connect a Stellar wallet to see projects you have created."
               actionLabel="Go to Wallet"
               actionHref="/wallet"
             />
@@ -107,9 +121,9 @@ export default function DashboardPage() {
           {address && !loading && stats.mine.length === 0 && (
             <EmptyState
               icon="rocket"
-              title="No campaigns yet"
-              description="Launch your first campaign on StellarFund."
-              actionLabel="Create Campaign"
+              title="No projects yet"
+              description="Launch your first funding campaign — it only takes a few minutes."
+              actionLabel="Start a Project"
               actionHref="/campaigns/create"
             />
           )}
@@ -127,13 +141,15 @@ export default function DashboardPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Radio className="h-5 w-5 text-orange-400" />
-                Live Activity
+                Live activity
               </CardTitle>
             </CardHeader>
             <CardContent>
               {events.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Waiting for events...
+                  {connected
+                    ? "No recent events yet. Contributions and launches will show up here."
+                    : "Connecting to event stream..."}
                 </p>
               ) : (
                 <ul className="max-h-80 space-y-3 overflow-y-auto">
@@ -143,7 +159,7 @@ export default function DashboardPage() {
                       className="rounded-lg bg-white/5 px-3 py-2 text-sm"
                     >
                       <span className="font-medium text-orange-400">
-                        #{e.campaignId}
+                        Project #{e.campaignId}
                       </span>{" "}
                       {e.type.replace(/_/g, " ")}
                     </li>

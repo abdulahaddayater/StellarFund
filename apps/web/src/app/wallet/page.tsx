@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   Wallet,
@@ -15,6 +16,15 @@ import { truncateAddress } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
+import { HelpBanner } from "@/components/ui/help-banner";
+
+const setupSteps = [
+  "Install the Freighter browser extension",
+  "Open Freighter → Settings → switch network to Testnet",
+  "Get free test XLM from the Stellar Laboratory faucet",
+  "Return here and click Connect Wallet",
+];
 
 export default function WalletPage() {
   const { address, isConnected, isConnecting, connect, disconnect } =
@@ -29,40 +39,81 @@ export default function WalletPage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="mb-2 text-3xl font-bold">Wallet</h1>
-        <p className="mb-8 text-muted-foreground">
-          Connect your Stellar wallet to create and back campaigns
-        </p>
+        <PageHeader
+          title="Wallet"
+          description="Your Stellar wallet lets you create projects, contribute XLM, and sign transactions securely."
+        />
 
         {!isConnected ? (
-          <EmptyState
-            icon="wallet"
-            title="No wallet connected"
-            description="Connect Freighter, xBull, or another Stellar wallet via the Wallets Kit."
-            actionLabel={isConnecting ? "Connecting..." : "Connect Wallet"}
-            onAction={connect}
-          />
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">First-time setup</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ol className="space-y-3">
+                  {setupSteps.map((step, index) => (
+                    <li key={step} className="flex gap-3 text-sm">
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-500/20 text-xs font-bold text-orange-400">
+                        {index + 1}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {index === 2 ? (
+                          <>
+                            Get free test XLM from the{" "}
+                            <a
+                              href="https://laboratory.stellar.org/#account-creator?network=test"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-orange-400 underline hover:text-orange-300"
+                            >
+                              Stellar Laboratory faucet
+                            </a>
+                          </>
+                        ) : (
+                          step
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+              </CardContent>
+            </Card>
+
+            <EmptyState
+              icon="wallet"
+              title="No wallet connected"
+              description="Connect Freighter or another Stellar wallet to start using StellarFund."
+              actionLabel={isConnecting ? "Connecting..." : "Connect Wallet"}
+              onAction={connect}
+            />
+          </div>
         ) : (
           <div className="space-y-6">
+            <HelpBanner variant="success" title="Wallet connected">
+              You can now browse projects, contribute XLM, or launch your own
+              campaign. Your private keys never leave Freighter.
+            </HelpBanner>
+
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wallet className="h-5 w-5 text-orange-400" />
-                  Connected Wallet
+                  Your account
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="glass rounded-xl border border-white/10 p-4">
-                  <p className="mb-1 text-xs text-muted-foreground">Address</p>
+                  <p className="mb-1 text-xs text-muted-foreground">Stellar address</p>
                   <p className="break-all font-mono text-sm">{address}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {truncateAddress(address!, 8)}
+                    Short form: {truncateAddress(address!, 8)}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button variant="secondary" size="sm" onClick={copyAddress}>
                     <Copy className="mr-2 h-4 w-4" />
-                    Copy
+                    Copy address
                   </Button>
                   <a
                     href={`https://stellar.expert/explorer/${EXPLORER_NETWORK}/account/${address}`}
@@ -71,7 +122,7 @@ export default function WalletPage() {
                   >
                     <Button variant="outline" size="sm">
                       <ExternalLink className="mr-2 h-4 w-4" />
-                      Explorer
+                      View on explorer
                     </Button>
                   </a>
                   <Button variant="destructive" size="sm" onClick={disconnect}>
@@ -85,13 +136,13 @@ export default function WalletPage() {
               {[
                 {
                   icon: Shield,
-                  title: "Secure",
-                  desc: "Your keys never leave your wallet",
+                  title: "You stay in control",
+                  desc: "Every transaction must be approved in your wallet.",
                 },
                 {
                   icon: Zap,
-                  title: "Fast",
-                  desc: "Sign transactions in seconds",
+                  title: "Quick to use",
+                  desc: "Sign contributions and launches in a few clicks.",
                 },
               ].map((item) => (
                 <Card key={item.title}>
@@ -104,6 +155,15 @@ export default function WalletPage() {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/campaigns">
+                <Button variant="secondary">Browse Projects</Button>
+              </Link>
+              <Link href="/campaigns/create">
+                <Button>Start a Project</Button>
+              </Link>
             </div>
           </div>
         )}

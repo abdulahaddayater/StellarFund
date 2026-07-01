@@ -27,6 +27,16 @@ describe("formatWalletError", () => {
       }),
     ).toContain("signAndSubmitTransaction");
   });
+
+  it("handles DOM Event rejections with a friendly message", () => {
+    expect(formatWalletError({})).toBe("Something went wrong");
+  });
+
+  it("handles user-cancelled wallet modal silently", () => {
+    expect(
+      formatWalletError({ code: -1, message: "The user closed the modal." }),
+    ).toBe("Wallet connection cancelled.");
+  });
 });
 
 describe("parseSorobanError account errors", () => {

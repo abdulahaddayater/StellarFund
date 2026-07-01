@@ -7,7 +7,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { submitCreateCampaign } from "@/lib/api/client";
-import { CATEGORIES } from "@/lib/constants";
+import { CATEGORIES, isOnChainMode } from "@/lib/constants";
 import { signAndSubmitXdr } from "@/lib/soroban/submit";
 import { formatWalletError } from "@/lib/soroban/errors";
 import { xlmToStroops } from "@/lib/utils";
@@ -16,6 +16,8 @@ import { useWallet } from "@/providers/wallet-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea, Label, Select } from "@/components/ui/input";
+import { PageHeader } from "@/components/ui/page-header";
+import { HelpBanner, FieldHint } from "@/components/ui/help-banner";
 
 const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
@@ -91,7 +93,7 @@ export default function CreateCampaignPage() {
       });
 
       if (result.mock) {
-        toast.success("Campaign created (demo mode)");
+        toast.success("Project created (demo mode)");
         if (result.campaignId) {
           router.push(`/campaigns/${result.campaignId}`);
         } else {
@@ -102,7 +104,7 @@ export default function CreateCampaignPage() {
 
       if (result.xdr) {
         const { returnValue } = await signAndSubmitXdr(result.xdr, address);
-        toast.success("Campaign created on-chain");
+        toast.success("Project created on-chain");
         const campaignId =
           typeof returnValue === "number"
             ? returnValue
@@ -127,32 +129,48 @@ export default function CreateCampaignPage() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="mb-2 text-3xl font-bold">Create Campaign</h1>
-        <p className="mb-8 text-muted-foreground">
-          Launch your project on Stellar Soroban testnet
-        </p>
+        <PageHeader
+          title="Start a Project"
+          description="Fill in the details below. When you submit, your wallet will ask you to approve a transaction on Stellar testnet."
+        />
+
+        {!isConnected && (
+          <HelpBanner className="mb-6" title="Wallet required">
+            Connect your wallet before launching. You will need test XLM in Freighter
+            to pay the small network fee.
+          </HelpBanner>
+        )}
+
+        {isOnChainMode && isConnected && (
+          <HelpBanner className="mb-6" variant="success" title="Ready to launch">
+            Your wallet is connected. After you click launch, approve the transaction
+            in Freighter to publish your project on-chain.
+          </HelpBanner>
+        )}
 
         <Card>
           <CardHeader>
-            <CardTitle>Campaign Details</CardTitle>
+            <CardTitle>Project details</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" {...register("title")} placeholder="My Awesome Project" />
+                <Label htmlFor="title">Project name</Label>
+                <Input id="title" {...register("title")} placeholder="e.g. Open-source music studio" />
+                <FieldHint>Keep it short and clear — backers see this first.</FieldHint>
                 {errors.title && (
                   <p className="mt-1 text-xs text-red-400">{errors.title.message}</p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">What are you building?</Label>
                 <Textarea
                   id="description"
                   {...register("description")}
-                  placeholder="Tell backers about your project..."
+                  placeholder="Explain your idea, what the money is for, and why people should support it..."
                 />
+                <FieldHint>At least 20 characters. Be specific about how funds will be used.</FieldHint>
                 {errors.description && (
                   <p className="mt-1 text-xs text-red-400">
                     {errors.description.message}
@@ -162,27 +180,30 @@ export default function CreateCampaignPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="goalXlm">Funding Goal (XLM)</Label>
+                  <Label htmlFor="goalXlm">Funding goal (XLM)</Label>
                   <Input id="goalXlm" type="number" step="0.1" {...register("goalXlm", { valueAsNumber: true })} />
+                  <FieldHint>How much XLM you need to succeed.</FieldHint>
                   {errors.goalXlm && (
                     <p className="mt-1 text-xs text-red-400">{errors.goalXlm.message}</p>
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="minContributionXlm">Min Contribution (XLM)</Label>
+                  <Label htmlFor="minContributionXlm">Minimum contribution (XLM)</Label>
                   <Input
                     id="minContributionXlm"
                     type="number"
                     step="0.1"
                     {...register("minContributionXlm", { valueAsNumber: true })}
                   />
+                  <FieldHint>Smallest amount a backer can send.</FieldHint>
                 </div>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="days">Duration (days)</Label>
+                  <Label htmlFor="days">Campaign length (days)</Label>
                   <Input id="days" type="number" {...register("days", { valueAsNumber: true })} />
+                  <FieldHint>After this date, no new contributions are accepted.</FieldHint>
                 </div>
                 <div>
                   <Label htmlFor="category">Category</Label>
@@ -197,16 +218,27 @@ export default function CreateCampaignPage() {
               </div>
 
               <div>
-                <Label htmlFor="image">Image URL</Label>
+                <Label htmlFor="image">Cover image URL</Label>
                 <Input
                   id="image"
                   {...register("image")}
                   placeholder="https://images.unsplash.com/photo-..."
                 />
+                <FieldHint>
+                  Use a direct link from images.unsplash.com. Search pages and other
+                  hosts are not supported.
+                </FieldHint>
+                {errors.image && (
+                  <p className="mt-1 text-xs text-red-400">{errors.image.message}</p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Creating..." : "Launch Campaign"}
+                {isSubmitting
+                  ? "Creating..."
+                  : isConnected
+                    ? "Launch Project"
+                    : "Connect Wallet to Launch"}
               </Button>
             </form>
           </CardContent>

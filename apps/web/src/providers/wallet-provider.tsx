@@ -12,7 +12,7 @@ import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
 import { Networks, KitEventType } from "@creit.tech/stellar-wallets-kit/types";
 import { NETWORK_PASSPHRASE } from "@/lib/constants";
-import { formatWalletError } from "@/lib/soroban/errors";
+import { formatWalletError, isUserCancelledWallet } from "@/lib/soroban/errors";
 import {
   restoreWalletSession,
   trackWalletModule,
@@ -95,7 +95,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("stellarfund_wallet", addr);
       toast.success("Wallet connected");
     } catch (err) {
-      toast.error(formatWalletError(err));
+      const message = formatWalletError(err);
+      if (!isUserCancelledWallet(err)) {
+        toast.error(message);
+      }
     } finally {
       setIsConnecting(false);
     }

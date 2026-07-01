@@ -12,6 +12,13 @@ export const STATUS_LABELS: Record<number, string> = {
   [CAMPAIGN_STATUS.CANCELLED]: "Cancelled",
 };
 
+export const STATUS_HELP: Record<number, string> = {
+  [CAMPAIGN_STATUS.ACTIVE]: "This project is open — you can contribute until the deadline.",
+  [CAMPAIGN_STATUS.SUCCEEDED]: "Funding goal was reached. The creator can withdraw.",
+  [CAMPAIGN_STATUS.FAILED]: "The goal was not reached. Backers can request a refund.",
+  [CAMPAIGN_STATUS.CANCELLED]: "The creator cancelled this project.",
+};
+
 export const CATEGORIES = [
   "All",
   "Technology",

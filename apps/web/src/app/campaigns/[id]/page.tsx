@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { CampaignImage } from "@/components/campaign/campaign-image";
 import { motion } from "framer-motion";
-import { Users, Clock, Target } from "lucide-react";
+import { Users, Clock, Target, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { fetchCampaign, submitContribute, submitWithdraw, submitRefund, submitCancel } from "@/lib/api/client";
 import type { Campaign } from "@/lib/types";
-import { CAMPAIGN_STATUS } from "@/lib/constants";
+import { CAMPAIGN_STATUS, STATUS_HELP } from "@/lib/constants";
 import { signAndSubmitXdr } from "@/lib/soroban/submit";
 import { formatWalletError } from "@/lib/soroban/errors";
 import {
@@ -21,11 +22,12 @@ import {
 import { useWallet } from "@/providers/wallet-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, Label } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { StatusBadge, CategoryBadge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
+import { HelpBanner, FieldHint } from "@/components/ui/help-banner";
 
 export default function CampaignDetailPage() {
   const params = useParams();
@@ -40,7 +42,7 @@ export default function CampaignDetailPage() {
 
   useEffect(() => {
     if (isNaN(id)) {
-      setError("Invalid campaign ID");
+      setError("Invalid project ID");
       setLoading(false);
       return;
     }
@@ -55,6 +57,8 @@ export default function CampaignDetailPage() {
   const progress = campaign
     ? progressPercent(campaign.raised, campaign.goal)
     : 0;
+  const minXlm = campaign ? campaign.minContribution / 10_000_000 : 0;
+  const statusHelp = campaign ? STATUS_HELP[campaign.status] : "";
 
   async function handleContribute() {
     if (!isConnected || !address) {
@@ -64,6 +68,10 @@ export default function CampaignDetailPage() {
     const xlm = parseFloat(amount);
     if (isNaN(xlm) || xlm <= 0) {
       toast.error("Enter a valid amount");
+      return;
+    }
+    if (campaign && xlm < minXlm) {
+      toast.error(`Minimum contribution is ${formatXlm(campaign.minContribution)} XLM`);
       return;
     }
     setSubmitting(true);
@@ -132,9 +140,9 @@ export default function CampaignDetailPage() {
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         <EmptyState
           icon="search"
-          title="Campaign not found"
-          description={error ?? "This campaign does not exist."}
-          actionLabel="Browse Campaigns"
+          title="Project not found"
+          description={error ?? "This project does not exist or was removed."}
+          actionLabel="Browse Projects"
           actionHref="/campaigns"
         />
       </div>
@@ -144,6 +152,14 @@ export default function CampaignDetailPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <Link
+          href="/campaigns"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-orange-400"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to all projects
+        </Link>
+
         <div className="relative mb-8 h-64 overflow-hidden rounded-2xl sm:h-80">
           <CampaignImage
             src={campaign.image}
@@ -163,8 +179,10 @@ export default function CampaignDetailPage() {
           <div className="lg:col-span-2">
             <h1 className="mb-2 text-3xl font-bold">{campaign.title}</h1>
             <p className="mb-6 text-sm text-muted-foreground">
-              by {truncateAddress(campaign.creator)}
+              Created by {truncateAddress(campaign.creator)}
             </p>
+            <HelpBanner className="mb-6">{statusHelp}</HelpBanner>
+            <h2 className="mb-3 text-lg font-semibold">About this project</h2>
             <p className="whitespace-pre-wrap text-muted-foreground">
               {campaign.description}
             </p>
@@ -177,7 +195,7 @@ export default function CampaignDetailPage() {
                   {formatXlm(campaign.raised)} XLM
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  raised of {formatXlm(campaign.goal)} XLM goal
+                  raised of {formatXlm(campaign.goal)} XLM goal ({progress}%)
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -191,85 +209,124 @@ export default function CampaignDetailPage() {
                     <Clock className="h-4 w-4 text-orange-400" />
                     {daysRemaining(campaign.deadline)} days left
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="col-span-2 flex items-center gap-2">
                     <Target className="h-4 w-4 text-orange-400" />
-                    Min {formatXlm(campaign.minContribution)} XLM
+                    Minimum contribution: {formatXlm(campaign.minContribution)} XLM
                   </div>
                 </div>
 
                 {campaign.status === CAMPAIGN_STATUS.ACTIVE && !isCreator && (
                   <div className="space-y-3 border-t border-white/10 pt-4">
-                    <Input
-                      type="number"
-                      placeholder="Amount in XLM"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      min={campaign.minContribution / 10_000_000}
-                      step="0.1"
-                    />
-                    <Button
-                      className="w-full"
-                      onClick={handleContribute}
-                      disabled={submitting}
-                    >
-                      {submitting ? "Processing..." : "Back This Project"}
-                    </Button>
+                    <p className="text-sm font-medium">Support this project</p>
+                    {!isConnected ? (
+                      <HelpBanner title="Connect your wallet">
+                        You need a Stellar wallet to send XLM. Click below to connect
+                        Freighter, then enter an amount.
+                      </HelpBanner>
+                    ) : (
+                      <>
+                        <div>
+                          <Label htmlFor="contribute-amount">Amount (XLM)</Label>
+                          <Input
+                            id="contribute-amount"
+                            type="number"
+                            placeholder={`At least ${formatXlm(campaign.minContribution)}`}
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                            min={minXlm}
+                            step="0.1"
+                          />
+                          <FieldHint>
+                            Your wallet will ask you to approve this transaction.
+                          </FieldHint>
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={handleContribute}
+                          disabled={submitting}
+                        >
+                          {submitting ? "Processing..." : "Contribute XLM"}
+                        </Button>
+                      </>
+                    )}
+                    {!isConnected && (
+                      <Button className="w-full" onClick={connect}>
+                        Connect Wallet to Contribute
+                      </Button>
+                    )}
                   </div>
                 )}
 
                 {isCreator && campaign.status === CAMPAIGN_STATUS.ACTIVE && (
-                  <Button
-                    variant="destructive"
-                    className="w-full"
-                    disabled={submitting}
-                    onClick={() =>
-                      handleAction(
-                        () => submitCancel({ campaignId: id, creator: address! }),
-                        "Cancel campaign",
-                      )
-                    }
-                  >
-                    Cancel Campaign
-                  </Button>
+                  <div className="space-y-3 border-t border-white/10 pt-4">
+                    <HelpBanner variant="warning" title="You created this project">
+                      You can cancel it while it is still active. Backers will be able
+                      to claim refunds.
+                    </HelpBanner>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      disabled={submitting}
+                      onClick={() =>
+                        handleAction(
+                          () => submitCancel({ campaignId: id, creator: address! }),
+                          "Cancel project",
+                        )
+                      }
+                    >
+                      Cancel Project
+                    </Button>
+                  </div>
                 )}
 
                 {isCreator &&
                   campaign.status === CAMPAIGN_STATUS.SUCCEEDED &&
                   !campaign.withdrawn && (
-                    <Button
-                      className="w-full"
-                      disabled={submitting}
-                      onClick={() =>
-                        handleAction(
-                          () => submitWithdraw({ campaignId: id, creator: address! }),
-                          "Withdraw funds",
-                        )
-                      }
-                    >
-                      Withdraw Funds
-                    </Button>
+                    <div className="space-y-3 border-t border-white/10 pt-4">
+                      <HelpBanner variant="success" title="Goal reached">
+                        You can withdraw the raised funds to your wallet.
+                      </HelpBanner>
+                      <Button
+                        className="w-full"
+                        disabled={submitting}
+                        onClick={() =>
+                          handleAction(
+                            () => submitWithdraw({ campaignId: id, creator: address! }),
+                            "Withdraw funds",
+                          )
+                        }
+                      >
+                        Withdraw Funds
+                      </Button>
+                    </div>
                   )}
 
                 {(campaign.status === CAMPAIGN_STATUS.FAILED ||
                   campaign.status === CAMPAIGN_STATUS.CANCELLED) &&
                   !isCreator && (
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      disabled={submitting}
-                      onClick={() =>
-                        handleAction(
-                          () =>
-                            submitRefund({
-                              campaignId: id,
-                              contributor: address!,
-                            }),
-                          "Claim refund",
-                        )
-                      }
-                    >
-                      Claim Refund
-                    </Button>
+                    <div className="space-y-3 border-t border-white/10 pt-4">
+                      <HelpBanner title="Refund available">
+                        This project did not succeed. If you contributed, you can claim
+                        your XLM back.
+                      </HelpBanner>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        disabled={submitting}
+                        onClick={() =>
+                          handleAction(
+                            () =>
+                              submitRefund({
+                                campaignId: id,
+                                contributor: address!,
+                              }),
+                            "Claim refund",
+                          )
+                        }
+                      >
+                        Claim Refund
+                      </Button>
+                    </div>
                   )}
               </CardContent>
             </Card>
