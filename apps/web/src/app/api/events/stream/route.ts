@@ -1,5 +1,3 @@
-import { NextResponse } from "next/server";
-
 export async function GET() {
   const encoder = new TextEncoder();
   let keepAliveInterval: ReturnType<typeof setInterval> | undefined;
