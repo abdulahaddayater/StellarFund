@@ -140,16 +140,27 @@ No secrets in frontend. Deploy identity stays in Stellar CLI only.
 
 ## Deployment (Vercel)
 
-The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` means Vercel is not serving the Next.js build (wrong root, wrong framework preset, or a failed deploy).
+The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` (with `Code: NOT_FOUND` and an ID like `bom1::...`) is **Vercel’s error**, not your app — it means Vercel is not serving a Next.js build.
 
-### Option A — Recommended (re-import project)
+**Your code is fine:** GitHub Actions **Frontend** job passes (`npm ci`, lint, test, `next build` with routes `/`, `/campaigns`, etc.).
 
-1. Delete the broken Vercel project (or create a new one).
-2. Go to [vercel.com/new](https://vercel.com/new) → import `abdulahaddayater/StellarFund`.
-3. **Root Directory** → Edit → pick **`apps/web`** (Next.js icon).
-4. **Framework Preset** → **Next.js** (not “Other”).
-5. Leave **Build Command**, **Output Directory**, and **Install Command** empty (defaults).
-6. Add environment variables (Production + Preview):
+### Why this happens (checklist)
+
+| Check | Wrong (causes 404) | Correct |
+|-------|-------------------|---------|
+| Root Directory | `.` or empty | **`apps/web`** |
+| Framework Preset | **Other** | **Next.js** |
+| Output Directory | `.next`, `out`, `dist`, or any custom path | **blank** (default) |
+| Build logs | Failed or no `next build` | Shows `✓ Compiled successfully` |
+| URL you open | Old preview / failed deploy | **Production** URL from green deploy card |
+
+### Option A — Re-import (most reliable)
+
+1. [vercel.com/new](https://vercel.com/new) → import **`abdulahaddayater/StellarFund`**
+2. **Root Directory** → Edit → select **`apps/web`** (Next.js icon)
+3. **Framework Preset** → **Next.js**
+4. Leave **Build Command**, **Output Directory**, and **Install Command** **empty**
+5. Add env vars (Production + Preview):
 
 | Variable | Example |
 |----------|---------|
@@ -157,19 +168,28 @@ The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` means Verce
 | `NEXT_PUBLIC_SOROBAN_RPC` | `https://soroban-testnet.stellar.org` |
 | `NEXT_PUBLIC_NETWORK` | `TESTNET` |
 
-7. Deploy, then open the **Production** URL from the successful deployment card.
+6. Deploy → open the **Production** URL from the successful deployment
 
-### Option B — Fix existing project
+### Option B — Fix existing Vercel project
 
-1. **Settings → General → Root Directory** = `apps/web` → Save.
-2. **Settings → Build and Deployment → Framework Preset** = **Next.js**.
-3. Clear any custom **Output Directory** override (must be blank for Next.js).
-4. **Deployments** → latest → **Redeploy** → uncheck “Use existing Build Cache”.
-5. Open the deployment; confirm **Build** logs show `next build` succeeding.
+1. **Settings → General → Root Directory** = `apps/web` → **Save**
+2. **Settings → Build and Deployment → Framework Preset** = **Next.js**
+3. Clear **Output Directory**, **Build Command**, and **Install Command** overrides
+4. **Deployments** → **Redeploy** → uncheck **Use existing Build Cache**
+5. In build logs, confirm you see:
+   - `npm ci`
+   - `next build`
+   - `Route (app)` table with `/`
 
-### Option C — Deploy from repo root
+### Option C — Repo root fallback
 
-Do **not** use repo root for Vercel. Always set **Root Directory** to `apps/web`. A root `vercel.json` with legacy `builds` ignores dashboard settings and triggers deployment warnings.
+If Root Directory stays at repo root (`./`), root **`vercel.json`** builds `apps/web` via `@vercel/next`. You may see a warning about `builds` — that is expected. Prefer Option A instead.
+
+### Verify locally
+
+```powershell
+.\scripts\verify-deploy.ps1
+```
 
 Contract deploy uses `scripts/deploy.ps1` / `scripts/deploy.sh` (manual).
 
