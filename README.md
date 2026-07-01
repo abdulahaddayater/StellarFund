@@ -140,11 +140,38 @@ No secrets in frontend. Deploy identity stays in Stellar CLI only.
 
 ## Deployment (Vercel)
 
-1. Import repo, set **Root Directory** to `apps/web`
-2. Add environment variables above
-3. Deploy
+The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` means Vercel is not serving the Next.js build (wrong root, wrong framework preset, or a failed deploy).
 
-Contract deploy uses GitHub Actions manual workflow or `scripts/deploy.ps1`.
+### Option A — Recommended (re-import project)
+
+1. Delete the broken Vercel project (or create a new one).
+2. Go to [vercel.com/new](https://vercel.com/new) → import `abdulahaddayater/StellarFund`.
+3. **Root Directory** → Edit → pick **`apps/web`** (Next.js icon).
+4. **Framework Preset** → **Next.js** (not “Other”).
+5. Leave **Build Command**, **Output Directory**, and **Install Command** empty (defaults).
+6. Add environment variables (Production + Preview):
+
+| Variable | Example |
+|----------|---------|
+| `NEXT_PUBLIC_REGISTRY_ID` | Your deployed registry contract ID |
+| `NEXT_PUBLIC_SOROBAN_RPC` | `https://soroban-testnet.stellar.org` |
+| `NEXT_PUBLIC_NETWORK` | `TESTNET` |
+
+7. Deploy, then open the **Production** URL from the successful deployment card.
+
+### Option B — Fix existing project
+
+1. **Settings → General → Root Directory** = `apps/web` → Save.
+2. **Settings → Build and Deployment → Framework Preset** = **Next.js**.
+3. Clear any custom **Output Directory** override (must be blank for Next.js).
+4. **Deployments** → latest → **Redeploy** → uncheck “Use existing Build Cache”.
+5. Open the deployment; confirm **Build** logs show `next build` succeeding.
+
+### Option C — Deploy from repo root
+
+Root `vercel.json` uses `@vercel/next` on `apps/web` when Root Directory is left at `./`. Use this only if you cannot set Root Directory to `apps/web`.
+
+Contract deploy uses `scripts/deploy.ps1` / `scripts/deploy.sh` (manual).
 
 ---
 

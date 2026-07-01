@@ -1,0 +1,8 @@
+{
+  "name": "stellarfund",
+  "private": true,
+  "description": "StellarFund monorepo. Next.js frontend in apps/web.",
+  "scripts": {
+    "vercel-build": "npm ci --prefix apps/web && npm run build --prefix apps/web"
+  }
+}
