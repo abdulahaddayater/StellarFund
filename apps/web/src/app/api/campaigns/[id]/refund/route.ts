@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCampaignFromChain, nativeToScVal, server } from "@/lib/soroban/client";
 import { TransactionBuilder, BASE_FEE, Contract } from "@stellar/stellar-sdk";
-import { isOnChainMode, NETWORK_PASSPHRASE, REGISTRY_ID } from "@/lib/constants";
+import { NETWORK_PASSPHRASE, REGISTRY_ID } from "@/lib/constants";
 import { parseSorobanError } from "@/lib/soroban/errors";
+import { requireOnChainMode } from "@/lib/registry-config";
 
 const schema = z.object({
   campaignId: z.number().int().positive(),
@@ -20,7 +21,9 @@ export async function POST(
     if (parseInt(id, 10) !== body.campaignId) {
       return NextResponse.json({ error: "ID mismatch" }, { status: 400 });
     }
-    if (!isOnChainMode) return NextResponse.json({ success: true, mock: true });
+
+    const blocked = requireOnChainMode();
+    if (blocked) return blocked;
 
     const campaign = await getCampaignFromChain(body.campaignId);
     if (!campaign) {

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCampaignFromChain } from "@/lib/soroban/client";
-import { MOCK_CAMPAIGNS } from "@/lib/mock-data";
 import { isOnChainMode } from "@/lib/constants";
 
 export async function GET(
@@ -14,22 +13,19 @@ export async function GET(
     return NextResponse.json({ error: "Invalid campaign ID" }, { status: 400 });
   }
 
-  try {
-    if (isOnChainMode) {
-      const campaign = await getCampaignFromChain(campaignId);
-      if (!campaign) {
-        return NextResponse.json(
-          { error: "Campaign not found on-chain" },
-          { status: 404 },
-        );
-      }
-      return NextResponse.json(campaign);
-    }
-
-    const mock = MOCK_CAMPAIGNS.find((c) => c.id === campaignId);
-    if (mock) return NextResponse.json(mock);
-
+  if (!isOnChainMode) {
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });
+  }
+
+  try {
+    const campaign = await getCampaignFromChain(campaignId);
+    if (!campaign) {
+      return NextResponse.json(
+        { error: "Campaign not found on-chain" },
+        { status: 404 },
+      );
+    }
+    return NextResponse.json(campaign);
   } catch (err) {
     console.error(`GET /api/campaigns/${id}:`, err);
     return NextResponse.json({ error: "Campaign not found" }, { status: 404 });

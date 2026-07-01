@@ -93,7 +93,7 @@ export default function CampaignsPage() {
               ? "Try a different search or category filter."
               : isOnChainMode
                 ? "Be the first person to launch a funding campaign on testnet."
-                : "No campaigns match your filters."
+                : "Connect the registry contract via NEXT_PUBLIC_REGISTRY_ID to load real campaigns."
           }
           actionLabel="Start a Project"
           actionHref="/campaigns/create"

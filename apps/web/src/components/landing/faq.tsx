@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "Is this on mainnet?",
-    a: "Currently StellarFund runs on Soroban testnet for development and demos. Set NEXT_PUBLIC_NETWORK=TESTNET in your environment.",
+    a: "StellarFund runs on Stellar Soroban testnet. All campaigns and contributions are recorded on-chain when NEXT_PUBLIC_REGISTRY_ID is configured.",
   },
 ];
 

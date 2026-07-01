@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { TransactionBuilder, BASE_FEE, Contract } from "@stellar/stellar-sdk";
 import { nativeToScVal, server } from "@/lib/soroban/client";
-import { isOnChainMode, NETWORK_PASSPHRASE, REGISTRY_ID } from "@/lib/constants";
+import { NETWORK_PASSPHRASE, REGISTRY_ID } from "@/lib/constants";
 import { parseSorobanError } from "@/lib/soroban/errors";
 import { isAllowedCampaignImageUrl } from "@/lib/campaign-image";
+import { requireOnChainMode } from "@/lib/registry-config";
 
 const schema = z.object({
   title: z.string().min(1).max(200),
@@ -25,15 +26,10 @@ const schema = z.object({
 
 export async function POST(req: Request) {
   try {
-    const body = schema.parse(await req.json());
+    const blocked = requireOnChainMode();
+    if (blocked) return blocked;
 
-    if (!isOnChainMode) {
-      return NextResponse.json({
-        success: true,
-        campaignId: 1,
-        mock: true,
-      });
-    }
+    const body = schema.parse(await req.json());
 
     const contract = new Contract(REGISTRY_ID);
     const account = await server.getAccount(body.creator);

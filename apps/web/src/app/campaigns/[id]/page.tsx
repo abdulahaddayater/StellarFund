@@ -81,9 +81,7 @@ export default function CampaignDetailPage() {
         contributor: address,
         amount: Number(xlmToStroops(xlm)),
       });
-      if (result.mock) {
-        toast.success("Contribution submitted (demo mode)");
-      } else if (result.xdr) {
+      if (result.xdr) {
         await signAndSubmitXdr(result.xdr, address);
         toast.success("Contribution submitted on-chain");
         await refreshBalance();
@@ -100,7 +98,7 @@ export default function CampaignDetailPage() {
   }
 
   async function handleAction(
-    fn: () => Promise<{ success: boolean; mock?: boolean; xdr?: string }>,
+    fn: () => Promise<{ success: boolean; xdr?: string }>,
     label: string,
   ) {
     if (!address) {
@@ -110,9 +108,7 @@ export default function CampaignDetailPage() {
     setSubmitting(true);
     try {
       const result = await fn();
-      if (result.mock) {
-        toast.success(`${label} (demo mode)`);
-      } else if (result.xdr) {
+      if (result.xdr) {
         await signAndSubmitXdr(result.xdr, address);
         toast.success(`${label} submitted on-chain`);
         await refreshBalance();

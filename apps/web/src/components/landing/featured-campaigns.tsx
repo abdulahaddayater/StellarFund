@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCampaigns } from "@/hooks/use-campaigns";
 import { sortCampaigns } from "@/lib/campaigns";
+import { isOnChainMode } from "@/lib/constants";
 import { CampaignCard } from "@/components/campaign/campaign-card";
 import { CampaignGridSkeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -41,7 +42,11 @@ export function FeaturedCampaigns() {
           <EmptyState
             icon="rocket"
             title="No projects yet"
-            description="Be the first to launch a funding campaign on Stellar testnet."
+            description={
+              isOnChainMode
+                ? "Be the first to launch a funding campaign on Stellar testnet."
+                : "Real campaigns load from Soroban once NEXT_PUBLIC_REGISTRY_ID is configured."
+            }
             actionLabel="Start a Project"
             actionHref="/campaigns/create"
           />

@@ -92,16 +92,6 @@ export default function CreateCampaignPage() {
         creator: address,
       });
 
-      if (result.mock) {
-        toast.success("Project created (demo mode)");
-        if (result.campaignId) {
-          router.push(`/campaigns/${result.campaignId}`);
-        } else {
-          router.push("/campaigns");
-        }
-        return;
-      }
-
       if (result.xdr) {
         const { returnValue } = await signAndSubmitXdr(result.xdr, address);
         await refreshBalance();
@@ -119,6 +109,8 @@ export default function CreateCampaignPage() {
         );
         return;
       }
+
+      toast.error("Could not prepare on-chain transaction");
 
       toast.success("Transaction prepared — sign in your wallet");
       router.push("/campaigns");
@@ -139,6 +131,13 @@ export default function CreateCampaignPage() {
           <HelpBanner className="mb-6" title="Wallet required">
             Connect your wallet before launching. You will need test XLM in Freighter
             to pay the small network fee.
+          </HelpBanner>
+        )}
+
+        {!isOnChainMode && (
+          <HelpBanner className="mb-6" title="Registry not configured">
+            Set NEXT_PUBLIC_REGISTRY_ID in Vercel (or .env.local) to create real
+            on-chain projects. Placeholder campaigns are not used.
           </HelpBanner>
         )}
 

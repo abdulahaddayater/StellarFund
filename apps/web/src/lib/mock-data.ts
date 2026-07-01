@@ -3,6 +3,7 @@ import { CAMPAIGN_STATUS } from "./constants";
 
 const now = Math.floor(Date.now() / 1000);
 
+/** Test fixtures only — not used in production API routes. */
 export const MOCK_CAMPAIGNS: Campaign[] = [
   {
     id: 1,

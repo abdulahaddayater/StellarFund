@@ -27,7 +27,7 @@ export async function submitCreateCampaign(data: {
   category: string;
   minContribution: number;
   creator: string;
-}): Promise<{ success: boolean; campaignId?: number; xdr?: string; mock?: boolean }> {
+}): Promise<{ success: boolean; xdr?: string }> {
   const res = await fetch("/api/campaigns/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -44,7 +44,7 @@ export async function submitContribute(data: {
   campaignId: number;
   contributor: string;
   amount: number;
-}): Promise<{ success: boolean; xdr?: string; mock?: boolean }> {
+}): Promise<{ success: boolean; xdr?: string }> {
   const res = await fetch(`/api/campaigns/${data.campaignId}/contribute`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ export async function submitContribute(data: {
 export async function submitWithdraw(data: {
   campaignId: number;
   creator: string;
-}): Promise<{ success: boolean; xdr?: string; mock?: boolean }> {
+}): Promise<{ success: boolean; xdr?: string }> {
   const res = await fetch(`/api/campaigns/${data.campaignId}/withdraw`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -76,7 +76,7 @@ export async function submitWithdraw(data: {
 export async function submitRefund(data: {
   campaignId: number;
   contributor: string;
-}): Promise<{ success: boolean; xdr?: string; mock?: boolean }> {
+}): Promise<{ success: boolean; xdr?: string }> {
   const res = await fetch(`/api/campaigns/${data.campaignId}/refund`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -92,7 +92,7 @@ export async function submitRefund(data: {
 export async function submitCancel(data: {
   campaignId: number;
   creator: string;
-}): Promise<{ success: boolean; xdr?: string; mock?: boolean }> {
+}): Promise<{ success: boolean; xdr?: string }> {
   const res = await fetch(`/api/campaigns/${data.campaignId}/cancel`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

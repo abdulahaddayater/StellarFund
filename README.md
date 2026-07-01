@@ -178,7 +178,7 @@ After redeploy, Production Overrides should **match** Project Settings (no stale
 
 | Variable | Example |
 |----------|---------|
-| `NEXT_PUBLIC_REGISTRY_ID` | Your deployed registry contract ID |
+| `NEXT_PUBLIC_REGISTRY_ID` | Deployed registry contract ID (required for real campaigns) |
 | `NEXT_PUBLIC_SOROBAN_RPC` | `https://soroban-testnet.stellar.org` |
 | `NEXT_PUBLIC_NETWORK` | `TESTNET` |
 
