@@ -169,7 +169,7 @@ The Next.js app lives in **`apps/web`**. A platform `404: NOT_FOUND` means Verce
 
 ### Option C — Deploy from repo root
 
-Root `vercel.json` uses `@vercel/next` on `apps/web` when Root Directory is left at `./`. Use this only if you cannot set Root Directory to `apps/web`.
+Do **not** use repo root for Vercel. Always set **Root Directory** to `apps/web`. A root `vercel.json` with legacy `builds` ignores dashboard settings and triggers deployment warnings.
 
 Contract deploy uses `scripts/deploy.ps1` / `scripts/deploy.sh` (manual).
 
