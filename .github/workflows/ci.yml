@@ -18,10 +18,12 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          targets: wasm32-unknown-unknown
+          targets: wasm32v1-none
       - name: Install Stellar CLI
         run: |
-          curl -sSfL https://github.com/stellar/stellar-cli/releases/latest/download/stellar-cli-linux-x86_64.tar.gz | tar -xz -C /usr/local/bin stellar
+          curl -fsSL https://github.com/stellar/stellar-cli/raw/main/install.sh | sh -s -- --install-deps
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          stellar --version
       - name: Build WASM
         run: |
           stellar contract build --package treasury
