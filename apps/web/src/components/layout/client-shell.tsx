@@ -1,28 +1,12 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Suspense } from "react";
 import { ToastProvider } from "@/providers/toast-provider";
-
-const WalletShell = dynamic(() => import("@/components/layout/wallet-shell"), {
-  ssr: false,
-});
-
-function WalletShellFallback({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <header className="sticky top-0 z-50 h-16 border-b border-white/10 bg-background/70 backdrop-blur-xl" />
-      <main>{children}</main>
-    </>
-  );
-}
+import WalletShell from "@/components/layout/wallet-shell";
 
 export function ClientShell({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <Suspense fallback={<WalletShellFallback>{children}</WalletShellFallback>}>
-        <WalletShell>{children}</WalletShell>
-      </Suspense>
+      <WalletShell>{children}</WalletShell>
       <ToastProvider />
     </>
   );

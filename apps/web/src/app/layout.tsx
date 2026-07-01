@@ -29,7 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-[#0a0a0f] text-[#fafafa] antialiased`}
       >
         <Script id="chunk-error-recovery" strategy="beforeInteractive">
           {CHUNK_ERROR_RECOVERY_SCRIPT}
