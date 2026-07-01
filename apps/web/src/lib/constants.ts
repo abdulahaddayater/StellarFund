@@ -52,6 +52,10 @@ export const REGISTRY_ID = process.env.NEXT_PUBLIC_REGISTRY_ID ?? "";
 export const SOROBAN_RPC =
   process.env.NEXT_PUBLIC_SOROBAN_RPC ?? "https://soroban-testnet.stellar.org";
 
+export const HORIZON_URL = NETWORK_PASSPHRASE.includes("Test")
+  ? "https://horizon-testnet.stellar.org"
+  : "https://horizon.stellar.org";
+
 /** When set, the app reads/writes real Soroban contracts — no demo campaign fallback. */
 export const isOnChainMode = Boolean(REGISTRY_ID);
 

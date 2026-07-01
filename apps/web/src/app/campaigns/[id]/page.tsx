@@ -31,7 +31,7 @@ import { HelpBanner, FieldHint } from "@/components/ui/help-banner";
 
 export default function CampaignDetailPage() {
   const params = useParams();
-  const { address, isConnected, connect } = useWallet();
+  const { address, isConnected, connect, refreshBalance } = useWallet();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +86,7 @@ export default function CampaignDetailPage() {
       } else if (result.xdr) {
         await signAndSubmitXdr(result.xdr, address);
         toast.success("Contribution submitted on-chain");
+        await refreshBalance();
         setCampaign(await fetchCampaign(id));
       } else {
         toast.success("Transaction prepared — sign in your wallet");
@@ -114,6 +115,7 @@ export default function CampaignDetailPage() {
       } else if (result.xdr) {
         await signAndSubmitXdr(result.xdr, address);
         toast.success(`${label} submitted on-chain`);
+        await refreshBalance();
         setCampaign(await fetchCampaign(id));
       } else {
         toast.success(`${label} — sign in wallet`);

@@ -12,6 +12,7 @@ import { StellarWalletsKit } from "@creit.tech/stellar-wallets-kit/sdk";
 import { defaultModules } from "@creit.tech/stellar-wallets-kit/modules/utils";
 import { Networks, KitEventType } from "@creit.tech/stellar-wallets-kit/types";
 import { NETWORK_PASSPHRASE } from "@/lib/constants";
+import { fetchNativeXlmBalance } from "@/lib/stellar/balance";
 import { formatWalletError, isUserCancelledWallet } from "@/lib/soroban/errors";
 import {
   restoreWalletSession,
@@ -21,10 +22,13 @@ import { toast } from "sonner";
 
 interface WalletContextValue {
   address: string | null;
+  xlmBalance: number | null;
+  balanceLoading: boolean;
   isConnected: boolean;
   isConnecting: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  refreshBalance: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextValue | null>(null);
@@ -49,7 +53,30 @@ function ensureKit() {
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
+  const [xlmBalance, setXlmBalance] = useState<number | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+
+  const refreshBalance = useCallback(async () => {
+    if (!address) {
+      setXlmBalance(null);
+      return;
+    }
+
+    setBalanceLoading(true);
+    try {
+      const balance = await fetchNativeXlmBalance(address);
+      setXlmBalance(balance);
+    } catch {
+      setXlmBalance(null);
+    } finally {
+      setBalanceLoading(false);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    refreshBalance();
+  }, [refreshBalance]);
 
   useEffect(() => {
     ensureKit();
@@ -74,6 +101,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           localStorage.setItem("stellarfund_wallet", addr);
         } else {
           setAddress(null);
+          setXlmBalance(null);
           localStorage.removeItem("stellarfund_wallet");
           localStorage.removeItem("stellarfund_wallet_module");
         }
@@ -112,6 +140,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       /* ignore */
     }
     setAddress(null);
+    setXlmBalance(null);
     localStorage.removeItem("stellarfund_wallet");
     localStorage.removeItem("stellarfund_wallet_module");
     toast.info("Wallet disconnected");
@@ -120,12 +149,23 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       address,
+      xlmBalance,
+      balanceLoading,
       isConnected: !!address,
       isConnecting,
       connect,
       disconnect,
+      refreshBalance,
     }),
-    [address, isConnecting, connect, disconnect],
+    [
+      address,
+      xlmBalance,
+      balanceLoading,
+      isConnecting,
+      connect,
+      disconnect,
+      refreshBalance,
+    ],
   );
 
   return (

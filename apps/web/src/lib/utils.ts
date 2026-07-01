@@ -12,7 +12,11 @@ export function truncateAddress(address: string, chars = 4): string {
 
 export function formatXlm(stroops: number | bigint): string {
   const value = Number(stroops) / 10_000_000;
-  return value.toLocaleString(undefined, {
+  return formatXlmAmount(value);
+}
+
+export function formatXlmAmount(xlm: number): string {
+  return xlm.toLocaleString(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: 7,
   });

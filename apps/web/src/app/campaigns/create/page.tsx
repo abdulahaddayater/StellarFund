@@ -48,7 +48,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function CreateCampaignPage() {
   const router = useRouter();
-  const { address, isConnected, connect } = useWallet();
+  const { address, isConnected, connect, refreshBalance } = useWallet();
 
   const {
     register,
@@ -104,6 +104,7 @@ export default function CreateCampaignPage() {
 
       if (result.xdr) {
         const { returnValue } = await signAndSubmitXdr(result.xdr, address);
+        await refreshBalance();
         toast.success("Project created on-chain");
         const campaignId =
           typeof returnValue === "number"

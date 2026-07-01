@@ -8,11 +8,12 @@ import {
   ExternalLink,
   Shield,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useWallet } from "@/providers/wallet-provider";
 import { EXPLORER_NETWORK } from "@/lib/constants";
-import { truncateAddress } from "@/lib/utils";
+import { formatXlmAmount, truncateAddress } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -27,13 +28,26 @@ const setupSteps = [
 ];
 
 export default function WalletPage() {
-  const { address, isConnected, isConnecting, connect, disconnect } =
-    useWallet();
+  const {
+    address,
+    xlmBalance,
+    balanceLoading,
+    isConnected,
+    isConnecting,
+    connect,
+    disconnect,
+    refreshBalance,
+  } = useWallet();
 
   function copyAddress() {
     if (!address) return;
     navigator.clipboard.writeText(address);
     toast.success("Address copied");
+  }
+
+  async function handleRefreshBalance() {
+    await refreshBalance();
+    toast.success("Balance updated");
   }
 
   return (
@@ -94,6 +108,48 @@ export default function WalletPage() {
               You can now browse projects, contribute XLM, or launch your own
               campaign. Your private keys never leave Freighter.
             </HelpBanner>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                <CardTitle className="text-lg">XLM balance</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRefreshBalance}
+                  disabled={balanceLoading}
+                >
+                  <RefreshCw
+                    className={`mr-2 h-4 w-4 ${balanceLoading ? "animate-spin" : ""}`}
+                  />
+                  Refresh
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <p className="text-4xl font-bold text-orange-400">
+                  {balanceLoading
+                    ? "Loading..."
+                    : `${formatXlmAmount(xlmBalance ?? 0)} XLM`}
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Available in your connected wallet on Stellar testnet. You need
+                  XLM to pay network fees and contribute to projects.
+                </p>
+                {xlmBalance === 0 && !balanceLoading && (
+                  <p className="mt-3 text-sm text-amber-300">
+                    Your balance is 0. Get free test XLM from the{" "}
+                    <a
+                      href="https://laboratory.stellar.org/#account-creator?network=test"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-amber-200"
+                    >
+                      Stellar Laboratory faucet
+                    </a>
+                    .
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
             <Card>
               <CardHeader>

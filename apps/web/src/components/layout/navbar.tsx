@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useState } from "react";
-import { cn, truncateAddress } from "@/lib/utils";
+import { cn, formatXlmAmount, truncateAddress } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useWallet } from "@/providers/wallet-provider";
 
@@ -29,7 +29,7 @@ const navLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { address, isConnected, isConnecting, connect, disconnect } =
+  const { address, xlmBalance, balanceLoading, isConnected, isConnecting, connect, disconnect } =
     useWallet();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -71,9 +71,33 @@ export function Navbar() {
           </Button>
 
           {isConnected && address ? (
-            <Button variant="secondary" size="sm" onClick={disconnect}>
-              {truncateAddress(address)}
-            </Button>
+            <>
+              <Link href="/wallet" className="sm:hidden">
+                <Button variant="outline" size="sm">
+                  {balanceLoading
+                    ? "..."
+                    : xlmBalance !== null
+                      ? `${formatXlmAmount(xlmBalance)} XLM`
+                      : "Wallet"}
+                </Button>
+              </Link>
+              <div className="hidden items-center gap-2 sm:flex">
+                <Link href="/wallet">
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <span className="font-semibold text-orange-400">
+                      {balanceLoading
+                        ? "..."
+                        : xlmBalance !== null
+                          ? `${formatXlmAmount(xlmBalance)} XLM`
+                          : "— XLM"}
+                    </span>
+                  </Button>
+                </Link>
+                <Button variant="secondary" size="sm" onClick={disconnect}>
+                  {truncateAddress(address)}
+                </Button>
+              </div>
+            </>
           ) : (
             <Button size="sm" onClick={connect} disabled={isConnecting}>
               {isConnecting ? "Connecting..." : "Connect Wallet to Begin"}
