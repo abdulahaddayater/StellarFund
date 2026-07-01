@@ -2,7 +2,7 @@
 extern crate std;
 
 use super::*;
-use soroban_sdk::{testutils::Address as _, Address, Env, String};
+use soroban_sdk::{testutils::Address as _, Address, Env};
 
 #[test]
 fn test_record_deposit() {

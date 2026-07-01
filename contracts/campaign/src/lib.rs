@@ -2,7 +2,7 @@
 
 use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, contracttype, panic_with_error,
-    symbol_short, Address, Env, String, Vec,
+    Address, Env, String, Vec,
 };
 
 mod treasury {
