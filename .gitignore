@@ -1,0 +1,15 @@
+node_modules/
+.next/
+dist/
+target/
+.env
+.env.local
+.env.*.local
+deployments.*.json
+test_snapshots/
+playwright-report/
+test-results/
+frontend/
+backend/
+*.log
+.DS_Store
