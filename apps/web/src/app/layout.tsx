@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Navbar, Footer } from "@/components/layout/navbar";
-import { TestnetBanner } from "@/components/layout/testnet-banner";
-import { ChunkErrorHandler } from "@/components/layout/chunk-error-handler";
-import { ThemeProvider } from "@/providers/theme-provider";
-import { WalletProvider } from "@/providers/wallet-provider";
-import { ToastProvider } from "@/providers/toast-provider";
+import { ClientShell } from "@/components/layout/client-shell";
+import { CHUNK_ERROR_RECOVERY_SCRIPT } from "@/lib/chunk-error";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,16 +31,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background text-foreground antialiased`}
       >
-        <ThemeProvider>
-          <WalletProvider>
-            <ChunkErrorHandler />
-            <Navbar />
-            <TestnetBanner />
-            <main>{children}</main>
-            <Footer />
-            <ToastProvider />
-          </WalletProvider>
-        </ThemeProvider>
+        <Script id="chunk-error-recovery" strategy="beforeInteractive">
+          {CHUNK_ERROR_RECOVERY_SCRIPT}
+        </Script>
+        <ClientShell>{children}</ClientShell>
       </body>
     </html>
   );

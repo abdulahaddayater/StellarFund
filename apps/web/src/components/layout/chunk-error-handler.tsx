@@ -1,26 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
+import { isChunkOrLoadFailure } from "@/lib/chunk-error";
 
 const RELOAD_KEY = "stellarfund_chunk_reload";
-
-function isChunkOrLoadFailure(reason: unknown): boolean {
-  if (reason instanceof Event) return true;
-
-  const text =
-    reason instanceof Error
-      ? reason.message
-      : typeof reason === "string"
-        ? reason
-        : String(reason);
-
-  return (
-    text === "[object Event]" ||
-    /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Cannot find module '\.\/\d+\.js'/i.test(
-      text,
-    )
-  );
-}
 
 export function ChunkErrorHandler() {
   useEffect(() => {
@@ -52,8 +35,6 @@ export function ChunkErrorHandler() {
 
     window.addEventListener("unhandledrejection", onUnhandledRejection);
     window.addEventListener("error", onError);
-
-    sessionStorage.removeItem(RELOAD_KEY);
 
     return () => {
       window.removeEventListener("unhandledrejection", onUnhandledRejection);
